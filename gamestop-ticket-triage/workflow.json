@@ -1,1 +1,68 @@
-{}
+{
+  "name": "GameStop Ticket Triage",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "jira-ticket",
+        "method": "POST"
+      },
+      "name": "JIRA Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const desc = $json.issue.fields.description || \"\";\nreturn [{ priority: desc.includes(\"POS down\") ? \"High\" : \"Normal\" }];"
+      },
+      "name": "Determine Priority",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "channel": "#it-support",
+        "text": "High-priority GameStop ticket detected: POS system down!"
+      },
+      "name": "Slack Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [750, 300],
+      "credentials": {
+        "slackApi": {
+          "id": "3",
+          "name": "Slack API Token"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "JIRA Webhook": {
+      "main": [
+        [
+          {
+            "node": "Determine Priority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Determine Priority": {
+      "main": [
+        [
+          {
+            "node": "Slack Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "id": "2"
+}
+
