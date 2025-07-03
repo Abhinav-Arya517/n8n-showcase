@@ -1,1 +1,75 @@
-{}
+{
+  "name": "Order to Delivery Flow",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "stripe-payment",
+        "method": "POST"
+      },
+      "name": "Stripe Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "url": "https://api.stripe.com/v1/customers/{{$json['data']['object']['customer']}}",
+        "method": "GET"
+      },
+      "name": "Fetch Stripe Customer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [500, 300],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "1",
+          "name": "Stripe API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "channel": "#orders",
+        "text": "New Stripe payment received. Customer fetched successfully!"
+      },
+      "name": "Send Slack Message",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [750, 300],
+      "credentials": {
+        "slackApi": {
+          "id": "2",
+          "name": "Slack API Token"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Stripe Webhook": {
+      "main": [
+        [
+          {
+            "node": "Fetch Stripe Customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Stripe Customer": {
+      "main": [
+        [
+          {
+            "node": "Send Slack Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "id": "1"
+}
